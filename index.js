@@ -4,7 +4,7 @@ var path = require('path')
   , xml2js = require('xml2js')
   ;
 var Q = require('q');
-var soap = require('soap');
+var soap = require('soap-ntlm-2');
 
 var __ = function() {};
 
@@ -17,12 +17,13 @@ var __ = function() {};
  *
  * @return {promise - exchanger client}
  */
-__.initialize = function(settings) {
-    var instance = new __();
+__.prototype.initialize = function(settings) {
+    var instance = this;
+
     instance.username = settings.username;
     instance.security = {
         basic: new soap.BasicAuthSecurity(settings.username, settings.password),
-        ntlm: new soap.NtlmAuthSecurity(settings.username, settings.password),
+        ntlm: new soap.NtlmSecurity(settings.username, settings.password),
         ws: new soap.WSSecurity(settings.username, settings.password)
     };
 
@@ -34,9 +35,9 @@ __.initialize = function(settings) {
         endpoint: endpoint
     }).then(
         function(client) {
-            instance.client = client;
-            instance.setSecurity();
-            return instance;
+          instance.client = client;
+          instance.setSecurity('ntlm');
+          return client;
         }
     );
 };
@@ -50,7 +51,6 @@ __.prototype.setSecurity = function(type) {
     if (Object.keys(this.security).indexOf(type) < 0) {
         return;
     }
-
     this.client.setSecurity(this.security[type]);
 };
 
@@ -142,11 +142,71 @@ __.prototype.getEmails = function(folderName, limit) {
 }
 
 /**
+ * Resolve a name
+ * @param {string} name - name to resolve
+ * @return {promise - array email objects}
+ */
+__.prototype.resolveNames = function(name) {
+  if (!name) {
+    return callback(new Error('No name provided.'));
+  }
+
+  var soapRequest =
+    '<tns:ResolveNames xmlns="http://schemas.microsoft.com/exchange/services/2006/messages" ReturnFullContactData="false">' +
+      '<tns:UnresolvedEntry>' + name + '</tns:UnresolvedEntry>' +
+    '</tns:ResolveNames>';
+
+  return Q.nfcall(this.client.ResolveNames, soapRequest).spread(
+    function(result, body) {
+      var parser = new xml2js.Parser();
+
+      return Q.nfcall(parser.parseString, body).then(
+        function(result) {
+          var responseCode = result['s:Body']['m:ResolveNamesResponse']['m:ResponseMessages']['m:ResolveNamesResponseMessage']['m:ResponseCode'];
+          if (responseCode !== 'NoError') {
+            throw new Error(responseCode);
+          }
+
+          var rootFolder = result['s:Body']['m:ResolveNamesResponse']['m:ResponseMessages']['m:ResolveNamesResponseMessage']['m:ResolutionSet'];
+          var contacts = [], iterableResult = [];
+
+          if(rootFolder['@'].TotalItemsInView == 1) {
+            iterableResult.push(rootFolder['t:Resolution']);
+          }
+          else {
+            iterableResult = rootFolder['t:Resolution'];
+          }
+          iterableResult.forEach(function (item, idx) {
+            contacts.push({
+              name: item['t:Mailbox']['t:Name'],
+              email: item['t:Mailbox']['t:EmailAddress'],
+            });
+          });
+
+          return contacts;
+        }
+      )
+    }
+  ).fail(function(result) {
+    if (typeof result.response !== 'undefined' && result.response.statusCode == 401) {
+      var error = new Error('Unauthorized');
+      error.code = 401;
+      throw error;
+    }
+    else if (result.code == 'ENOTFOUND') {
+      var error = new Error('Not Found');
+      error.code = 404;
+      throw error;
+    }
+  });
+}
+
+/**
  * Checks if the account can be successfully accessed
- * Currently uses getEmails until a better function is coded.
+ * Currently uses resolveNames until a better function is coded.
  * @returns {promise resolves if login successful}
  */
-__.prototype.checkLogin = __.prototype.getEmails;
+__.prototype.checkLogin = __.prototype.resolveNames;
 
 
 /**
@@ -286,4 +346,4 @@ __.prototype.checkLogin = __.prototype.getEmails;
 //   });
 // }
 
-module.exports = __;
+module.exports = new __();
