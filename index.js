@@ -148,7 +148,7 @@ __.prototype.getEmails = function(folderName, limit) {
  */
 __.prototype.resolveNames = function(name) {
     if (!name) {
-        return callback(new Error('No name provided.'));
+        throw new Error('No name provided.');
     }
 
     var soapRequest =
@@ -213,18 +213,6 @@ __.prototype.checkLogin = __.prototype.resolveNames;
  * @return {promise - array calendar objects}
  */
 __.prototype.getCalendars = function() {
-    var soapRequest =
-        '<tns:FindFolder Traversal="Shallow" xmlns:tns="http://schemas.microsoft.com/exchange/services/2006/messages">' +
-        '<tns:FolderShape>' +
-        '<t:BaseShape>Default</t:BaseShape>' +
-        '</tns:FolderShape>' +
-        '<tns:ParentFolderIds>' +
-        '<t:DistinguishedFolderId Id="calendar"></t:DistinguishedFolderId>' +
-        '</tns:ParentFolderIds>' +
-        '</tns:FindFolder>';
-
-    var calendars = [];
-
     return Q.all([this.getRootCalendar(), this.getUserCalendars()])
         .then(function (values) {
             return values[0].concat(values[1]);
@@ -424,7 +412,6 @@ __.prototype.getCalendarItems = function(calendar, startDate, endDate) {
             )
         }
     ).fail(function(result) {
-        console.log(result);
         if (typeof result.response !== 'undefined' && result.response.statusCode == 401) {
             var error = new Error('Unauthorized');
             error.code = 401;
