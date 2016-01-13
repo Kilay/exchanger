@@ -1,8 +1,8 @@
 var path = require('path')
-  , moment = require('moment')
-  , crypto = require('crypto')
-  , xml2js = require('xml2js')
-  ;
+    , moment = require('moment')
+    , crypto = require('crypto')
+    , xml2js = require('xml2js')
+    ;
 var Q = require('q');
 var soap = require('soap-ntlm-2');
 
@@ -35,9 +35,9 @@ __.prototype.initialize = function(settings) {
         endpoint: endpoint
     }).then(
         function(client) {
-          instance.client = client;
-          instance.setSecurity('ntlm');
-          return client;
+            instance.client = client;
+            instance.setSecurity('ntlm');
+            return client;
         }
     );
 };
@@ -67,28 +67,28 @@ __.prototype.getEmails = function(folderName, limit) {
     var soapRequest =
         '<tns:FindItem Traversal="Shallow" xmlns:tns="http://schemas.microsoft.com/exchange/services/2006/messages">' +
         '<tns:ItemShape>' +
-            '<t:BaseShape>IdOnly</t:BaseShape>' +
-            '<t:AdditionalProperties>' +
-            '<t:FieldURI FieldURI="item:ItemId"></t:FieldURI>' +
+        '<t:BaseShape>IdOnly</t:BaseShape>' +
+        '<t:AdditionalProperties>' +
+        '<t:FieldURI FieldURI="item:ItemId"></t:FieldURI>' +
             // '<t:FieldURI FieldURI="item:ConversationId"></t:FieldURI>' +
             // '<t:FieldURI FieldURI="message:ReplyTo"></t:FieldURI>' +
             // '<t:FieldURI FieldURI="message:ToRecipients"></t:FieldURI>' +
             // '<t:FieldURI FieldURI="message:CcRecipients"></t:FieldURI>' +
             // '<t:FieldURI FieldURI="message:BccRecipients"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="item:DateTimeCreated"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="item:DateTimeSent"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="item:HasAttachments"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="item:Size"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="message:From"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="message:IsRead"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="item:Importance"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="item:Subject"></t:FieldURI>' +
-            '<t:FieldURI FieldURI="item:DateTimeReceived"></t:FieldURI>' +
-            '</t:AdditionalProperties>' +
+        '<t:FieldURI FieldURI="item:DateTimeCreated"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="item:DateTimeSent"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="item:HasAttachments"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="item:Size"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="message:From"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="message:IsRead"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="item:Importance"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="item:Subject"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="item:DateTimeReceived"></t:FieldURI>' +
+        '</t:AdditionalProperties>' +
         '</tns:ItemShape>' +
         '<tns:IndexedPageItemView BasePoint="Beginning" Offset="0" MaxEntriesReturned="10"></tns:IndexedPageItemView>' +
         '<tns:ParentFolderIds>' +
-            '<t:DistinguishedFolderId Id="inbox"></t:DistinguishedFolderId>' +
+        '<t:DistinguishedFolderId Id="inbox"></t:DistinguishedFolderId>' +
         '</tns:ParentFolderIds>' +
         '</tns:FindItem>';
 
@@ -113,8 +113,8 @@ __.prototype.getEmails = function(folderName, limit) {
                         var hash = md5hasher.digest('hex');
 
                         var itemId = {
-                        id: item['t:ItemId']['@'].Id,
-                        changeKey: item['t:ItemId']['@'].ChangeKey
+                            id: item['t:ItemId']['@'].Id,
+                            changeKey: item['t:ItemId']['@'].ChangeKey
                         };
 
                         var dateTimeReceived = item['t:DateTimeReceived'];
@@ -147,58 +147,58 @@ __.prototype.getEmails = function(folderName, limit) {
  * @return {promise - array email objects}
  */
 __.prototype.resolveNames = function(name) {
-  if (!name) {
-    return callback(new Error('No name provided.'));
-  }
+    if (!name) {
+        return callback(new Error('No name provided.'));
+    }
 
-  var soapRequest =
-    '<tns:ResolveNames xmlns="http://schemas.microsoft.com/exchange/services/2006/messages" ReturnFullContactData="false">' +
-      '<tns:UnresolvedEntry>' + name + '</tns:UnresolvedEntry>' +
-    '</tns:ResolveNames>';
+    var soapRequest =
+        '<tns:ResolveNames xmlns="http://schemas.microsoft.com/exchange/services/2006/messages" ReturnFullContactData="false">' +
+        '<tns:UnresolvedEntry>' + name + '</tns:UnresolvedEntry>' +
+        '</tns:ResolveNames>';
 
-  return Q.nfcall(this.client.ResolveNames, soapRequest).spread(
-    function(result, body) {
-      var parser = new xml2js.Parser();
+    return Q.nfcall(this.client.ResolveNames, soapRequest).spread(
+        function(result, body) {
+            var parser = new xml2js.Parser();
 
-      return Q.nfcall(parser.parseString, body).then(
-        function(result) {
-          var responseCode = result['s:Body']['m:ResolveNamesResponse']['m:ResponseMessages']['m:ResolveNamesResponseMessage']['m:ResponseCode'];
-          if (responseCode !== 'NoError') {
-            throw new Error(responseCode);
-          }
+            return Q.nfcall(parser.parseString, body).then(
+                function(result) {
+                    var responseCode = result['s:Body']['m:ResolveNamesResponse']['m:ResponseMessages']['m:ResolveNamesResponseMessage']['m:ResponseCode'];
+                    if (responseCode !== 'NoError') {
+                        throw new Error(responseCode);
+                    }
 
-          var rootFolder = result['s:Body']['m:ResolveNamesResponse']['m:ResponseMessages']['m:ResolveNamesResponseMessage']['m:ResolutionSet'];
-          var contacts = [], iterableResult = [];
+                    var rootFolder = result['s:Body']['m:ResolveNamesResponse']['m:ResponseMessages']['m:ResolveNamesResponseMessage']['m:ResolutionSet'];
+                    var contacts = [], iterableResult = [];
 
-          if(rootFolder['@'].TotalItemsInView == 1) {
-            iterableResult.push(rootFolder['t:Resolution']);
-          }
-          else {
-            iterableResult = rootFolder['t:Resolution'];
-          }
-          iterableResult.forEach(function (item, idx) {
-            contacts.push({
-              name: item['t:Mailbox']['t:Name'],
-              email: item['t:Mailbox']['t:EmailAddress'],
-            });
-          });
+                    if(rootFolder['@'].TotalItemsInView == 1) {
+                        iterableResult.push(rootFolder['t:Resolution']);
+                    }
+                    else {
+                        iterableResult = rootFolder['t:Resolution'];
+                    }
+                    iterableResult.forEach(function (item, idx) {
+                        contacts.push({
+                            name: item['t:Mailbox']['t:Name'],
+                            email: item['t:Mailbox']['t:EmailAddress'],
+                        });
+                    });
 
-          return contacts;
+                    return contacts;
+                }
+            )
         }
-      )
-    }
-  ).fail(function(result) {
-    if (typeof result.response !== 'undefined' && result.response.statusCode == 401) {
-      var error = new Error('Unauthorized');
-      error.code = 401;
-      throw error;
-    }
-    else if (result.code == 'ENOTFOUND') {
-      var error = new Error('Not Found');
-      error.code = 404;
-      throw error;
-    }
-  });
+    ).fail(function(result) {
+        if (typeof result.response !== 'undefined' && result.response.statusCode == 401) {
+            var error = new Error('Unauthorized');
+            error.code = 401;
+            throw error;
+        }
+        else if (result.code == 'ENOTFOUND') {
+            var error = new Error('Not Found');
+            error.code = 404;
+            throw error;
+        }
+    });
 }
 
 /**
@@ -208,6 +208,235 @@ __.prototype.resolveNames = function(name) {
  */
 __.prototype.checkLogin = __.prototype.resolveNames;
 
+/**
+ * Retrieve all user calendars
+ * @return {promise - array calendar objects}
+ */
+__.prototype.getCalendars = function() {
+    var soapRequest =
+        '<tns:FindFolder Traversal="Shallow" xmlns:tns="http://schemas.microsoft.com/exchange/services/2006/messages">' +
+        '<tns:FolderShape>' +
+        '<t:BaseShape>Default</t:BaseShape>' +
+        '</tns:FolderShape>' +
+        '<tns:ParentFolderIds>' +
+        '<t:DistinguishedFolderId Id="calendar"></t:DistinguishedFolderId>' +
+        '</tns:ParentFolderIds>' +
+        '</tns:FindFolder>';
+
+    var calendars = [];
+
+    return Q.all([this.getRootCalendar(), this.getUserCalendars()])
+        .then(function (values) {
+            return values[0].concat(values[1]);
+        })
+}
+
+/**
+ * Retrieve calendars created by user
+ * @param {string} folder - calendar id to retrieve
+ * @return {promise - array calendar objects}
+ */
+__.prototype.getUserCalendars = function(folder) {
+    folder = folder || 'calendar';
+
+    var soapRequest =
+        '<tns:FindFolder Traversal="Shallow" xmlns:tns="http://schemas.microsoft.com/exchange/services/2006/messages">' +
+        '<tns:FolderShape>' +
+        '<t:BaseShape>Default</t:BaseShape>' +
+        '</tns:FolderShape>' +
+        '<tns:ParentFolderIds>' +
+        '<t:DistinguishedFolderId Id="calendar" />' +
+        '</tns:ParentFolderIds>' +
+        '</tns:FindFolder>';
+
+    return Q.nfcall(this.client.FindFolder, soapRequest).spread(
+        function(result, body) {
+            var parser = new xml2js.Parser();
+
+            return Q.nfcall(parser.parseString, body).then(
+                function(result) {
+                    var responseCode = result['s:Body']['m:FindFolderResponse']['m:ResponseMessages']['m:FindFolderResponseMessage']['m:ResponseCode'];
+                    if (responseCode !== 'NoError') {
+                        throw new Error(responseCode);
+                    }
+
+                    var calendars = [];
+                    var rootFolder = result['s:Body']['m:FindFolderResponse']['m:ResponseMessages']['m:FindFolderResponseMessage']['m:RootFolder']['t:Folders']['t:CalendarFolder'];
+                    rootFolder.forEach(function (item, idx) {
+                        calendars.push({
+                            id: item['t:FolderId']['@'].Id,
+                            changeKey: item['t:FolderId']['@'].ChangeKey,
+                            name: item['t:DisplayName'],
+                        });
+                    });
+
+                    return calendars;
+                }
+            )
+        }
+    ).fail(function(result) {
+        if (typeof result.response !== 'undefined' && result.response.statusCode == 401) {
+            var error = new Error('Unauthorized');
+            error.code = 401;
+            throw error;
+        }
+        else if (result.code == 'ENOTFOUND') {
+            var error = new Error('Not Found');
+            error.code = 404;
+            throw error;
+        }
+    });
+}
+
+/**
+ * Retrieve root calendar
+ * @return {promise - array calendar objects}
+ */
+__.prototype.getRootCalendar = function() {
+    var soapRequest =
+        '<tns:GetFolder xmlns:tns="http://schemas.microsoft.com/exchange/services/2006/messages">' +
+        '<tns:FolderShape>' +
+        '<t:BaseShape>Default</t:BaseShape>' +
+        '</tns:FolderShape>' +
+        '<tns:FolderIds>' +
+        '<t:DistinguishedFolderId Id="calendar" />' +
+        '</tns:FolderIds>' +
+        '</tns:GetFolder>';
+
+    return Q.nfcall(this.client.GetFolder, soapRequest).spread(
+        function(result, body) {
+            var parser = new xml2js.Parser();
+
+            return Q.nfcall(parser.parseString, body).then(
+                function(result) {
+                    var responseCode = result['s:Body']['m:GetFolderResponse']['m:ResponseMessages']['m:GetFolderResponseMessage']['m:ResponseCode'];
+                    if (responseCode !== 'NoError') {
+                        throw new Error(responseCode);
+                    }
+
+                    var calendars = [];
+
+                    var rootFolder = result['s:Body']['m:GetFolderResponse']['m:ResponseMessages']['m:GetFolderResponseMessage']['m:Folders']['t:CalendarFolder'];
+                    calendars.push({
+                        id: rootFolder['t:FolderId']['@'].Id,
+                        changeKey: rootFolder['t:FolderId']['@'].ChangeKey,
+                        name: rootFolder['t:DisplayName'],
+                    });
+
+                    return calendars;
+                }
+            )
+        }
+    ).fail(function(result) {
+        if (typeof result.response !== 'undefined' && result.response.statusCode == 401) {
+            var error = new Error('Unauthorized');
+            error.code = 401;
+            throw error;
+        }
+        else if (result.code == 'ENOTFOUND') {
+            var error = new Error('Not Found');
+            error.code = 404;
+            throw error;
+        }
+    });
+}
+
+/**
+ * Retrieve calendars created by user
+ * @param {object} calendar - calendar id to retrieve
+ * @param {string} startDate - start range date
+ * @param {string} endDate - end range date
+ * @return {promise - array calendar event objects}
+ */
+__.prototype.getCalendarItems = function(calendar, startDate, endDate) {
+    calendar = calendar || { id: 'calendar'};
+
+    var soapRequest =
+        '<tns:FindItem Traversal="Shallow">' +
+        '<tns:ItemShape>' +
+        '<t:BaseShape>IdOnly</t:BaseShape>' +
+        '<t:AdditionalProperties>' +
+        '<t:FieldURI FieldURI="item:Subject"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="calendar:Start"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="calendar:End"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="calendar:Duration"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="calendar:Location"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="calendar:Organizer"></t:FieldURI>' +
+        '<t:FieldURI FieldURI="calendar:IsAllDayEvent"></t:FieldURI>' +
+        '</t:AdditionalProperties>' +
+        '</tns:ItemShape>' +
+        '<tns:CalendarView StartDate="' + startDate + '" EndDate="' + endDate + '"/>' +
+        '<tns:ParentFolderIds>' +
+        '<t:FolderId Id="' + calendar.id + '" />' +
+        '</tns:ParentFolderIds>' +
+        '</tns:FindItem>';
+
+    return Q.nfcall(this.client.FindItem, soapRequest).spread(
+        function(result, body) {
+            var parser = new xml2js.Parser();
+
+            return Q.nfcall(parser.parseString, body).then(
+                function(result) {
+                    var responseCode = result['s:Body']['m:FindItemResponse']['m:ResponseMessages']['m:FindItemResponseMessage']['m:ResponseCode'];
+                    if (responseCode !== 'NoError') {
+                        throw new Error(responseCode);
+                    }
+
+                    var rootFolder = result['s:Body']['m:FindItemResponse']['m:ResponseMessages']['m:FindItemResponseMessage']['m:RootFolder'];
+
+                    var events = [], iterableResult = [];
+
+                    if(rootFolder['@'].TotalItemsInView == 1) {
+                        iterableResult.push(rootFolder['t:Items']['t:CalendarItem']);
+                    }
+                    else {
+                        iterableResult = rootFolder['t:Items']['t:CalendarItem'];
+                    }
+
+                    iterableResult.forEach(function (item, idx) {
+                        var md5hasher = crypto.createHash('md5');
+                        md5hasher.update(item['t:Subject'] + item['t:Start']);
+                        var hash = md5hasher.digest('hex');
+
+                        var itemId = {
+                            id: item['t:ItemId']['@'].Id,
+                            changeKey: item['t:ItemId']['@'].ChangeKey
+                        };
+
+                        events.push({
+                            id: itemId.id + '|' + itemId.changeKey,
+                            hash: hash,
+                            subject: item['t:Subject'],
+                            start: item['t:Start'],
+                            end: item['t:End'],
+                            location: item['t:Location'],
+                            organizer: item['t:Organizer']['t:Mailbox']['t:Name'],
+                            duration: item['t:Duration'],
+                            allday: item['t:IsAllDayEvent'] === 'true',
+                            meta: {
+                                itemId: itemId
+                            }
+                        });
+                    });
+
+                    return events;
+                }
+            )
+        }
+    ).fail(function(result) {
+        console.log(result);
+        if (typeof result.response !== 'undefined' && result.response.statusCode == 401) {
+            var error = new Error('Unauthorized');
+            error.code = 401;
+            throw error;
+        }
+        else if (result.code == 'ENOTFOUND') {
+            var error = new Error('Not Found');
+            error.code = 404;
+            throw error;
+        }
+    });
+}
 
 /**
  * Other preconstructed EWS soap requests
