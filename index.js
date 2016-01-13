@@ -48,6 +48,13 @@ __.prototype.initialize = function(settings) {
  */
 __.prototype.setSecurity = function(type) {
     type = type || 'basic';
+    if(this.client == undefined) {
+        var error = new Error('Must initialize client first');
+        error.code = 'NOCLIENT';
+        var deferred = Q.defer();
+        deferred.reject(error);
+        return deferred.promise;
+    }
     if (Object.keys(this.security).indexOf(type) < 0) {
         return;
     }
@@ -63,6 +70,13 @@ __.prototype.setSecurity = function(type) {
 __.prototype.getEmails = function(folderName, limit) {
     folderName = folderName || 'inbox';
     limit = limit || 10;
+    if(this.client == undefined) {
+        var error = new Error('Must initialize client first');
+        error.code = 'NOCLIENT';
+        var deferred = Q.defer();
+        deferred.reject(error);
+        return deferred.promise;
+    }
 
     var soapRequest =
         '<tns:FindItem Traversal="Shallow" xmlns:tns="http://schemas.microsoft.com/exchange/services/2006/messages">' +
@@ -148,7 +162,18 @@ __.prototype.getEmails = function(folderName, limit) {
  */
 __.prototype.resolveNames = function(name) {
     if (!name) {
-        throw new Error('No name provided.');
+        var error = new Error('No name provided.');
+        error.code = 'NONAME';
+        var deferred = Q.defer();
+        deferred.reject(error);
+        return deferred.promise;
+    }
+    if(this.client == undefined) {
+        var error = new Error('Must initialize client first');
+        error.code = 'NOCLIENT';
+        var deferred = Q.defer();
+        deferred.reject(error);
+        return deferred.promise;
     }
 
     var soapRequest =
@@ -213,10 +238,18 @@ __.prototype.checkLogin = __.prototype.resolveNames;
  * @return {promise - array calendar objects}
  */
 __.prototype.getCalendars = function() {
+    if(this.client == undefined) {
+        var error = new Error('Must initialize client first');
+        error.code = 'NOCLIENT';
+        var deferred = Q.defer();
+        deferred.reject(error);
+        return deferred.promise;
+    }
+
     return Q.all([this.getRootCalendar(), this.getUserCalendars()])
         .then(function (values) {
             return values[0].concat(values[1]);
-        })
+        });
 }
 
 /**
@@ -226,6 +259,13 @@ __.prototype.getCalendars = function() {
  */
 __.prototype.getUserCalendars = function(folder) {
     folder = folder || 'calendar';
+    if(this.client == undefined) {
+        var error = new Error('Must initialize client first');
+        error.code = 'NOCLIENT';
+        var deferred = Q.defer();
+        deferred.reject(error);
+        return deferred.promise;
+    }
 
     var soapRequest =
         '<tns:FindFolder Traversal="Shallow" xmlns:tns="http://schemas.microsoft.com/exchange/services/2006/messages">' +
@@ -281,6 +321,14 @@ __.prototype.getUserCalendars = function(folder) {
  * @return {promise - array calendar objects}
  */
 __.prototype.getRootCalendar = function() {
+    if(this.client == undefined) {
+        var error = new Error('Must initialize client first');
+        error.code = 'NOCLIENT';
+        var deferred = Q.defer();
+        deferred.reject(error);
+        return deferred.promise;
+    }
+
     var soapRequest =
         '<tns:GetFolder xmlns:tns="http://schemas.microsoft.com/exchange/services/2006/messages">' +
         '<tns:FolderShape>' +
@@ -338,6 +386,13 @@ __.prototype.getRootCalendar = function() {
  */
 __.prototype.getCalendarItems = function(calendar, startDate, endDate) {
     calendar = calendar || { id: 'calendar'};
+    if(this.client == undefined) {
+        var error = new Error('Must initialize client first');
+        error.code = 'NOCLIENT';
+        var deferred = Q.defer();
+        deferred.reject(error);
+        return deferred.promise;
+    }
 
     var soapRequest =
         '<tns:FindItem Traversal="Shallow">' +
