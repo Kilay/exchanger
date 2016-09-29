@@ -223,6 +223,11 @@ __.prototype.resolveNames = function(name) {
             error.code = 404;
             throw error;
         }
+        else if (result.code == 'NONTLM') {
+            var error = new Error('No NTLM response from server');
+            error.code = 'NONTLM';
+            throw error;
+        }
     });
 }
 
@@ -313,6 +318,11 @@ __.prototype.getUserCalendars = function(folder) {
             error.code = 404;
             throw error;
         }
+        else if (result.code == 'NONTLM') {
+            var error = new Error('No NTLM response from server');
+            error.code = 'NONTLM';
+            throw error;
+        }
     });
 }
 
@@ -372,6 +382,11 @@ __.prototype.getRootCalendar = function() {
         else if (result.code == 'ENOTFOUND') {
             var error = new Error('Not Found');
             error.code = 404;
+            throw error;
+        }
+        else if (result.code == 'NONTLM') {
+            var error = new Error('No NTLM response from server');
+            error.code = 'NONTLM';
             throw error;
         }
     });
@@ -475,6 +490,11 @@ __.prototype.getCalendarItems = function(calendar, startDate, endDate) {
         else if (result.code == 'ENOTFOUND') {
             var error = new Error('Not Found');
             error.code = 404;
+            throw error;
+        }
+        else if (result.code == 'NONTLM') {
+            var error = new Error('No NTLM response from server');
+            error.code = 'NONTLM';
             throw error;
         }
     });
