@@ -36,7 +36,7 @@ __.prototype.initialize = function(settings) {
     }).then(
         function(client) {
             instance.client = client;
-            instance.setSecurity('ntlm');
+            instance.setSecurity(settings.security);
             return client;
         }
     );
